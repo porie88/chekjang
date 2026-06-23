@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>책장</title>
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    background:#eceae6;
+    font-family:"Pretendard","Apple SD Gothic Neo",sans-serif;
+    color:#222;
+}
+.container{
+    max-width:900px;
+    margin:0 auto;
+    padding:60px 20px;
+}
+.hero{
+    margin-bottom:35px;
+}
+.logo{
+    font-size:58px;
+    font-weight:500;
+    letter-spacing:-2px;
+    margin:0;
+}
+.tagline{
+    margin-top:10px;
+    color:#666;
+    font-size:20px;
+}
+.card{
+    background:#fff;
+    border-radius:24px;
+    padding:24px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.05);
+    margin-bottom:18px;
+}
+.input-row{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:12px;
+}
+input{
+    padding:14px;
+    border:1px solid #ddd;
+    border-radius:14px;
+    font-size:15px;
+}
+button{
+    border:none;
+    border-radius:14px;
+    padding:13px 18px;
+    cursor:pointer;
+}
+.add-btn{
+    margin-top:12px;
+    width:100%;
+    background:#222;
+    color:white;
+}
+.book{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:20px;
+}
+.book-title{
+    font-size:28px;
+    margin:0 0 8px 0;
+}
+.progress-bar{
+    height:10px;
+    background:#e7e7e7;
+    border-radius:999px;
+    overflow:hidden;
+    margin:12px 0;
+}
+.progress{
+    height:100%;
+    background:#222;
+}
+.meta{
+    color:#666;
+}
+.actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+.small{
+    background:#f4f4f4;
+}
+.empty{
+    text-align:center;
+    color:#777;
+    padding:40px;
+}
+@media(max-width:700px){
+ .input-row{grid-template-columns:1fr}
+ .logo{font-size:44px}
+ .book{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1 class="logo">책장</h1>
+        <div class="tagline">오늘도 책갈피만큼은 앞으로 갔다.</div>
+    </div>
+
+    <div class="card">
+        <div class="input-row">
+            <input id="title" placeholder="책 제목">
+            <input id="total" type="number" placeholder="전체 페이지">
+            <input id="current" type="number" placeholder="읽은 페이지">
+        </div>
+        <button class="add-btn" onclick="addBook()">책 추가하기</button>
+    </div>
+
+    <div id="books"></div>
+</div>
+
+<script>
+let books = JSON.parse(localStorage.getItem("books")) || [];
+
+function save(){
+ localStorage.setItem("books", JSON.stringify(books));
+}
+
+function addBook(){
+ const title=document.getElementById("title").value.trim();
+ const total=Number(document.getElementById("total").value);
+ const current=Number(document.getElementById("current").value);
+
+ if(!title || total<=0 || current<0){alert("정보를 입력해주세요."); return;}
+
+ books.push({title,total,current});
+ save();
+ render();
+
+ document.getElementById("title").value="";
+ document.getElementById("total").value="";
+ document.getElementById("current").value="";
+}
+
+function addPages(i){
+ const p=Number(prompt("오늘 읽은 페이지 수"));
+ if(p>0){
+   books[i].current=Math.min(books[i].current+p, books[i].total);
+   save();
+   render();
+ }
+}
+
+function removeBook(i){
+ books.splice(i,1);
+ save();
+ render();
+}
+
+function render(){
+ const wrap=document.getElementById("books");
+
+ if(books.length===0){
+   wrap.innerHTML='<div class="card empty">아직 등록된 책이 없습니다.</div>';
+   return;
+ }
+
+ wrap.innerHTML=books.map((b,i)=>{
+   const per=Math.round((b.current/b.total)*100);
+   return `
+   <div class="card">
+      <div class="book">
+        <div>
+          <h2 class="book-title">${b.title}</h2>
+          <div class="meta">${b.current} / ${b.total} pages</div>
+          <div class="progress-bar">
+             <div class="progress" style="width:${per}%"></div>
+          </div>
+          <div class="meta">진행률 ${per}%</div>
+        </div>
+        <div class="actions">
+          <button class="small" onclick="addPages(${i})">기록</button>
+          <button class="small" onclick="removeBook(${i})">삭제</button>
+        </div>
+      </div>
+   </div>`;
+ }).join("");
+}
+render();
+</script>
+</body>
+</html>
